@@ -63,4 +63,20 @@ class UserTest < ActiveSupport::TestCase
 
     assert_not user.authenticate("wrong_password")
   end
+
+  test "作成時に webauthn_id が自動生成される" do
+    user = build_user
+
+    user.save!
+
+    assert user.webauthn_id.present?
+  end
+
+  test "webauthn_id が既に設定されている場合は上書きしない" do
+    user = build_user(webauthn_id: "existing-webauthn-id")
+
+    user.save!
+
+    assert_equal "existing-webauthn-id", user.webauthn_id
+  end
 end
