@@ -1,24 +1,36 @@
-# README
+# Sandbox Rails
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+このリポジトリは、Rails でハーネスエンジニアリングやループエンジニアリングを実験するためのものです。
 
-Things you may want to cover:
+## ワークフロー
 
-* Ruby version
+### 課題の作成
 
-* System dependencies
+1. 人間が課題を Github issue として起票します。
 
-* Configuration
+### 課題のブラッシュアップと実装計画作成
 
-* Database creation
+1. 人間が issue を Github Copilot に割り当てます。
+2. Github Copilot は、issue を読み、不明点がなくなるまで人間と議論します。
+3. Github Copilot は、不明点がなくなったら、実装計画を docs ディレクトリの下に作成します。この時、ファイル名は design_issue#1 のように、issue　番号がわかるようにします。
+4. 実装計画ができたら人間に報告します。
 
-* Database initialization
+### 実装計画のレビュー
 
-* How to run the test suite
+1. レビューは Claude Code が行います。
+2. レビュー結果がNGなら、その結果を元に、Github Copilot は再度実装計画を立てます。
 
-* Services (job queues, cache servers, search engines, etc.)
+### 実装とPullRequestの作成
 
-* Deployment instructions
+1. 実装は Claude Code が行います。branch 名は issues/1 のように issue 番号がわかるようにします。
+2. 後で人間が理解しやすいよう、こまめにコミットします。
+3. 完了したら Pull Request の作成まで行います。
 
-* ...
+### AIによるコードレビュー
+
+1. Github Copilot によるコードレビューを行います。
+2. 人間は、コードレビューの結果を見て、Auto fix するか、無視するかを決めます。
+
+### マージ
+
+1. 人間がマージします。
