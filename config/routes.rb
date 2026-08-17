@@ -9,6 +9,20 @@ Rails.application.routes.draw do
   get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
+  get "signup" => "registrations#new"
+  post "signup" => "registrations#create"
+
+  get "login" => "sessions#new"
+  post "login" => "sessions#create"
+  delete "logout" => "sessions#destroy"
+
+  namespace :webauthn do
+    post "registration/options" => "registrations#options"
+    post "registration" => "registrations#create"
+    post "authentication/options" => "authentications#options"
+    post "authentication" => "authentications#create"
+  end
+
   # Defines the root path route ("/")
-  # root "posts#index"
+  root "home#index"
 end

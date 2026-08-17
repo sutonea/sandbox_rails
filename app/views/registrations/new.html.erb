@@ -1,0 +1,30 @@
+<h1>新規登録</h1>
+
+<% if @user.errors.any? %>
+  <ul>
+    <% @user.errors.full_messages.each do |message| %>
+      <li><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= form_with model: @user, url: signup_path do |form| %>
+  <div>
+    <%= form.label :username, "ユーザー名" %>
+    <%= form.text_field :username %>
+  </div>
+
+  <div>
+    <%= form.label :password, "パスワード" %>
+    <%= form.password_field :password %>
+  </div>
+
+  <div>
+    <%= form.label :password_confirmation, "パスワード（確認）" %>
+    <%= form.password_field :password_confirmation %>
+  </div>
+
+  <%= form.submit "登録する" %>
+<% end %>
+
+<p><%= link_to "すでにアカウントをお持ちの方はこちら", login_path %></p>
