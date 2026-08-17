@@ -3,7 +3,9 @@
 one:
   username: alice
   password_digest: <%= BCrypt::Password.create("password123") %>
+  webauthn_id: <%= WebAuthn.generate_user_id %>
 
 two:
   username: bob
   password_digest: <%= BCrypt::Password.create("password123") %>
+  webauthn_id: <%= WebAuthn.generate_user_id %>

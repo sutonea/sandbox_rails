@@ -10,13 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_17_025852) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_17_054106) do
   create_table "users", force: :cascade do |t|
     t.string "username", null: false
     t.string "password_digest", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "webauthn_id", null: false
     t.index ["username"], name: "index_users_on_username", unique: true
+    t.index ["webauthn_id"], name: "index_users_on_webauthn_id", unique: true
   end
 
   create_table "webauthn_credentials", force: :cascade do |t|

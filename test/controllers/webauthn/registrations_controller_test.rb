@@ -24,6 +24,18 @@ class Webauthn::RegistrationsControllerTest < ActionDispatch::IntegrationTest
     assert body["challenge"].present?
   end
 
+  test "user.id には DB の主キーではなく base64url エンコードされた webauthn_id が使われる" do
+    user = users(:one)
+    login_as(user)
+
+    post webauthn_registration_options_path
+
+    body = JSON.parse(response.body)
+    assert_equal user.webauthn_id, body["user"]["id"]
+    assert_not_equal user.id.to_s, body["user"]["id"]
+    assert_nothing_raised { WebAuthn.configuration.encoder.decode(body["user"]["id"]) }
+  end
+
   test "有効な attestation でパスキーを登録できる" do
     login_as(users(:one))
     client = WebAuthn::FakeClient.new(FAKE_ORIGIN)

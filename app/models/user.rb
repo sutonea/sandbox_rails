@@ -3,6 +3,8 @@ class User < ApplicationRecord
 
   has_many :webauthn_credentials, dependent: :destroy
 
+  before_create { self.webauthn_id ||= WebAuthn.generate_user_id }
+
   validates :username,
             presence: true,
             uniqueness: true,
