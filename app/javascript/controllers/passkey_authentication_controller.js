@@ -4,16 +4,30 @@ import { get, supported } from "@github/webauthn-json"
 export default class extends Controller {
   static targets = ["status"]
 
-  connect() {
+  async connect() {
     if (!supported()) {
       this.element.hidden = true
       return
     }
 
-    this.authenticate()
+    if (await this.conditionalMediationAvailable()) {
+      this.authenticate({ mediation: "conditional" })
+    }
   }
 
-  async authenticate() {
+  authenticateWithButton() {
+    this.authenticate({})
+  }
+
+  async conditionalMediationAvailable() {
+    return !!(
+      window.PublicKeyCredential &&
+      PublicKeyCredential.isConditionalMediationAvailable &&
+      (await PublicKeyCredential.isConditionalMediationAvailable())
+    )
+  }
+
+  async authenticate({ mediation }) {
     this.setStatus("パスキーで認証しています…")
 
     try {
@@ -27,7 +41,12 @@ export default class extends Controller {
       }
 
       const options = await optionsResponse.json()
-      const credential = await get({ publicKey: options, mediation: "conditional" })
+      const getOptions = { publicKey: options }
+      if (mediation) {
+        getOptions.mediation = mediation
+      }
+
+      const credential = await get(getOptions)
 
       const authResponse = await fetch("/webauthn/authentication", {
         method: "POST",

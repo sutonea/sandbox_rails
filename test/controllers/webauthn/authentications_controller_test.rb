@@ -14,7 +14,7 @@ class Webauthn::AuthenticationsControllerTest < ActionDispatch::IntegrationTest
     post webauthn_registration_options_path
     challenge = JSON.parse(response.body)["challenge"]
 
-    post webauthn_registration_path, params: client.create(challenge: challenge), as: :json
+    post webauthn_registration_path, params: client.create(challenge: challenge, user_verified: true), as: :json
 
     delete logout_path
   end
@@ -35,7 +35,7 @@ class Webauthn::AuthenticationsControllerTest < ActionDispatch::IntegrationTest
     post webauthn_authentication_options_path
     challenge = JSON.parse(response.body)["challenge"]
 
-    assertion = client.get(challenge: challenge)
+    assertion = client.get(challenge: challenge, user_verified: true)
 
     post webauthn_authentication_path, params: assertion, as: :json
 
@@ -52,11 +52,45 @@ class Webauthn::AuthenticationsControllerTest < ActionDispatch::IntegrationTest
 
     post webauthn_authentication_options_path
     challenge = JSON.parse(response.body)["challenge"]
-    assertion = client.get(challenge: challenge)
+    assertion = client.get(challenge: challenge, user_verified: true)
 
     post webauthn_authentication_path, params: assertion, as: :json
 
     assert_operator credential.reload.sign_count, :>, 0
+  end
+
+  test "ユーザー検証(PIN/生体認証)されていない assertion では認証に失敗する" do
+    user = users(:one)
+    client = WebAuthn::FakeClient.new(FAKE_ORIGIN)
+    register_passkey_for(user, client)
+
+    post webauthn_authentication_options_path
+    challenge = JSON.parse(response.body)["challenge"]
+    assertion = client.get(challenge: challenge, user_verified: false)
+
+    post webauthn_authentication_path, params: assertion, as: :json
+
+    assert_response :unprocessable_entity
+    assert_nil session[:user_id]
+  end
+
+  test "同一 assertion を再送信するとリプレイとして弾かれる" do
+    user = users(:one)
+    client = WebAuthn::FakeClient.new(FAKE_ORIGIN)
+    register_passkey_for(user, client)
+    credential = user.webauthn_credentials.order(:id).last
+
+    post webauthn_authentication_options_path
+    challenge = JSON.parse(response.body)["challenge"]
+    assertion = client.get(challenge: challenge, user_verified: true)
+
+    post webauthn_authentication_path, params: assertion, as: :json
+    assert_response :success
+    sign_count_after_first_request = credential.reload.sign_count
+
+    post webauthn_authentication_path, params: assertion, as: :json
+    assert_response :unprocessable_entity
+    assert_equal sign_count_after_first_request, credential.reload.sign_count
   end
 
   test "登録されていない認証情報では認証に失敗する" do

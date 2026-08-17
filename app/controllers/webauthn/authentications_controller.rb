@@ -1,6 +1,6 @@
 class Webauthn::AuthenticationsController < ApplicationController
   def options
-    get_options = WebAuthn::Credential.options_for_get
+    get_options = WebAuthn::Credential.options_for_get(user_verification: "required")
 
     session[:webauthn_authentication_challenge] = get_options.challenge
 
@@ -15,13 +15,18 @@ class Webauthn::AuthenticationsController < ApplicationController
       return render json: { status: "error", message: "登録されていない認証情報です" }, status: :unprocessable_entity
     end
 
-    webauthn_credential.verify(
-      session[:webauthn_authentication_challenge],
-      public_key: credential.public_key,
-      sign_count: credential.sign_count
-    )
+    # sign_count の検証と更新の間で行ロックを取り、同一 assertion の同時多重送信による
+    # リプレイ検知のすり抜けを防ぐ
+    credential.with_lock do
+      webauthn_credential.verify(
+        session[:webauthn_authentication_challenge],
+        public_key: credential.public_key,
+        sign_count: credential.sign_count,
+        user_verification: true
+      )
 
-    credential.update!(sign_count: webauthn_credential.sign_count)
+      credential.update!(sign_count: webauthn_credential.sign_count)
+    end
 
     reset_session
     session[:user_id] = credential.user_id

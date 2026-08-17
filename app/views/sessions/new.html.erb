@@ -2,6 +2,7 @@
 
 <section data-controller="passkey-authentication">
   <h2>パスキーでログイン</h2>
+  <button type="button" data-action="passkey-authentication#authenticateWithButton">パスキーでログイン</button>
   <p data-passkey-authentication-target="status"></p>
 </section>
 
@@ -15,7 +16,7 @@
   <%= form_with url: login_path do |form| %>
     <div>
       <%= form.label :username, "ユーザー名" %>
-      <%= form.text_field :username %>
+      <%= form.text_field :username, autocomplete: "username webauthn" %>
     </div>
 
     <div>

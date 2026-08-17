@@ -31,7 +31,7 @@ class Webauthn::RegistrationsControllerTest < ActionDispatch::IntegrationTest
     post webauthn_registration_options_path
     challenge = JSON.parse(response.body)["challenge"]
 
-    credential = client.create(challenge: challenge)
+    credential = client.create(challenge: challenge, user_verified: true)
 
     assert_difference("WebauthnCredential.count", 1) do
       post webauthn_registration_path, params: credential, as: :json
@@ -39,6 +39,22 @@ class Webauthn::RegistrationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "ok", JSON.parse(response.body)["status"]
+  end
+
+  test "ユーザー検証(PIN/生体認証)されていない attestation では登録に失敗する" do
+    login_as(users(:one))
+    client = WebAuthn::FakeClient.new(FAKE_ORIGIN)
+
+    post webauthn_registration_options_path
+    challenge = JSON.parse(response.body)["challenge"]
+
+    credential = client.create(challenge: challenge, user_verified: false)
+
+    assert_no_difference("WebauthnCredential.count") do
+      post webauthn_registration_path, params: credential, as: :json
+    end
+
+    assert_response :unprocessable_entity
   end
 
   test "challenge が一致しない場合は登録に失敗する" do
